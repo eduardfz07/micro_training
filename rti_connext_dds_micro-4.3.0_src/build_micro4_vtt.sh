@@ -187,6 +187,22 @@ verify_pic_flags() {
     fi
 }
 
+verify_no_realloc_dependency() {
+    local target="$1"
+    local suffix archive
+    suffix="$(archive_suffix)"
+    archive="$SCRIPT_DIR/lib/$target/librti_me${suffix}.a"
+
+    [[ -f "$archive" ]] || { echo "[ERROR] Missing core archive: $archive" >&2; exit 1; }
+    if nm -u "$archive" | grep -qi realloc; then
+        echo "[ERROR] Realloc dependency found in $archive" >&2
+        nm -u "$archive" | grep -i realloc >&2
+        exit 1
+    fi
+
+    echo "[OK] No realloc dependency in $archive"
+}
+
 verify_microsar_sources() {
     local suffix archive_name
     suffix="$(archive_suffix)"
@@ -224,11 +240,13 @@ if [[ "$VERIFY" == "verify" ]]; then
     if [[ "$MODE" == "all" || "$MODE" == "pil" ]]; then
         verify_archives "$PIL_TARGET" 14
         verify_pic_flags "$PIL_TARGET"
+        verify_no_realloc_dependency "$PIL_TARGET"
     fi
     if [[ "$MODE" == "all" || "$MODE" == "psl" ]]; then
         verify_archives "$PSL_TARGET" 14
         verify_pic_flags "$PSL_TARGET"
         verify_microsar_sources
+        verify_no_realloc_dependency "$PSL_TARGET"
         "$SCRIPT_DIR/playbooks/microsar-pil-psl/verify_psl_symbols.sh" "$CONFIG"
     fi
 fi

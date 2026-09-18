@@ -9,7 +9,8 @@ host with GCC 13.3.0.
 - `resource/cmake/architectures/x86_64leElfgcc13.3.0-MICROSAR4.tc`: MICROSAR4 PSL
 
 Both targets use `/usr/bin/gcc-13`, `/usr/bin/g++-13`, and `-fPIC`. Neither
-target uses `-m32` or `RTI_32SYSTEM`.
+target uses `-m32` or `RTI_32SYSTEM`. The PIL defines
+`OSAPI_DONT_HAVE_REALLOC=1`, and all core call sites honor that setting.
 
 ## Environment
 
@@ -67,6 +68,16 @@ The wrapper verifies every delivered archive as ELF64 x86-64, confirms `-fPIC`
 and the absence of `-m32`, and proves the three PSL archives match the MICROSAR
 build rather than the generic PIL build. The symbol verifier uses `ar` and `nm`
 to confirm the AUTOSAR socket object and required callbacks.
+
+It also rejects a core archive that has any undefined realloc-like symbol. The
+equivalent manual check is:
+
+```bash
+nm -u lib/x86_64leElfgcc13.3.0-MICROSAR4/librti_mezd.a | grep -i realloc
+nm -u lib/x86_64leElfgcc13.3.0-MICROSAR4/librti_mez.a | grep -i realloc
+```
+
+Expected output is empty for both commands.
 
 ## SUT Archive Manifest
 

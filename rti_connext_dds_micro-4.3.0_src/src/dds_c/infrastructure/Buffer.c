@@ -99,7 +99,7 @@ DDS_Buffer_assert_buffer(struct DDS_Buffer *self, DDS_Long new_length)
     {
         /* If RTI_CERT is defined, it is an error to try to
            reallocate the buffer to a greater size. */
-#ifdef RTI_CERT
+#if defined(RTI_CERT) || OSAPI_DONT_HAVE_REALLOC
         goto done;
 #else
         self->pointer = (char*)OSAPI_Heap_realloc(self->pointer, (RTI_UINT32)new_length);
