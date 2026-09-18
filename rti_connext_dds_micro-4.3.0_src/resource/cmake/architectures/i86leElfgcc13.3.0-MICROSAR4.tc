@@ -1,0 +1,32 @@
+###############################################################################
+# (c) Copyright, Real-Time Innovations 2026
+#
+# All rights reserved.
+# No duplications, whole or partial, manual or electronic, may be made
+# without express written permission.  Any such copies, or
+# revisions thereof, must display this notice unaltered.
+# This code contains trade secrets of Real-Time Innovations, Inc.
+#
+################################################################################
+
+SET(CMAKE_SYSTEM_NAME MICROSAR)
+
+SET(COMPILER_PATH "/usr/bin" CACHE INTERNAL "COMPILER_PATH" FORCE)
+
+IF (${TARGET_HELP})
+    MESSAGE("TARGET\n\n i86leElfgcc13.3.0-MICROSAR4\n")
+    MESSAGE("DESCRIPTION\n")
+    MESSAGE(" This MICROSAR4 PSL target builds 32-bit ELF libraries on Linux")
+    MESSAGE(" with GCC 13.3.0 and uses the SIP selected by OSEK_PATH.")
+    MESSAGE("\nThis PSL is based on the following PIL:\n")
+    MESSAGE(" i86leElfgcc13.3.0\n")
+    RETURN()
+ENDIF()
+
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/Compiler/gcc_pi.tc)
+
+INCLUDE_GCC_COMPILER_PSL("13.3.0" "-m32")
+SET(CMAKE_C_COMPILER "${COMPILER_PATH}/gcc-13")
+SET(CMAKE_CXX_COMPILER "${COMPILER_PATH}/g++-13")
+
+SET(RTIME_EXCLUDE_NETIO_ZCOPY TRUE)

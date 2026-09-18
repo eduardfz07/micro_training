@@ -3,7 +3,7 @@
 ## Scope
 This document captures the proven build knowledge for PSL after the successful context beginning with:
 
-- Vector SIP reference: `C:\Users\jpark\Documents\rti_workspace\CBD1500710_D12`
+- Vector SIP reference: `home/efiego/Projects/CBD1500710_D12`
 - Goal: complete PSL driver build and produce `lib/psl` with 3 static libraries.
 
 ## Success Criteria

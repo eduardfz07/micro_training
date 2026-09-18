@@ -1,214 +1,61 @@
-# Reusable Workflow Entry
+# Linux GCC MICROSAR Build Workflow
 
-This file is the self-contained entrypoint for Visual Studio 2017 x86 MICROSAR VTT builds.
-The required generated artifacts are now part of the repo and can be maintained directly without relying on `.cheat`.
+This source bundle builds 32-bit ELF archives on a Linux host with GCC 13.3.0.
 
-Distribution intent for this workflow:
+## Architecture Files
 
-- The portable delivery set is this file plus `.claude` and `playbooks`.
-- Other implementation files may already exist in a target repo, but they must be treated as regeneratable or updatable outputs of this workflow.
-- The delivery set must be sufficient to recreate or update `build_micro4_vtt.bat`, the MICROSAR target `.tc` files, and the required CMake edits in a fresh context.
+- `resource/cmake/architectures/i86leElfgcc13.3.0.tc`: AUTOSAR PIL
+- `resource/cmake/architectures/i86leElfgcc13.3.0-MICROSAR4.tc`: MICROSAR4 PSL
 
-## New Context Quick Start
+Both targets use `/usr/bin/gcc-13`, `/usr/bin/g++-13`, and `-m32`. The PSL target uses the shared MICROSAR CMake platform and does not define Windows or MSVC compiler settings.
 
-1. Confirm `OSEK_PATH` is already defined in the user environment.
-2. From the repo root, run `build_micro4_vtt.bat all Debug verify`.
-3. If the build needs investigation, read this file first, then inspect `build_micro4_vtt.bat`, `resource/cmake/architectures/i86lePEvs2017*.tc`, and `playbooks/microsar-pil-psl/verify_psl_symbols.ps1`.
+## Environment
 
-Environment assumption for this workflow:
+The PIL build needs GCC 13.3.0 with multilib support. The PSL build additionally requires `OSEK_PATH` to point to the MICROSAR SIP root:
 
-- `OSEK_PATH` is already defined as a user environment variable.
-- `build_micro4_vtt.bat` prepares the repo-local build environment from the current directory before invoking the build.
-- No separate `setenv_micro_32bit.bat` step is required for the supported workflow.
-
-Primary workflow assets:
-
-- [build_micro4_vtt.bat](build_micro4_vtt.bat)
-- [rtimemake.bat](rtimemake.bat)
-- [CMakeLists.txt](CMakeLists.txt)
-- [resource/cmake/architectures/i86lePEvs2017.tc](resource/cmake/architectures/i86lePEvs2017.tc)
-- [resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc](resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc)
-- [src/rti_me_psl/CMakeLists.txt](src/rti_me_psl/CMakeLists.txt)
-- [playbooks/microsar-pil-psl/README.md](playbooks/microsar-pil-psl/README.md)
-- [playbooks/microsar-pil-psl/PROMPT_TEMPLATE.md](playbooks/microsar-pil-psl/PROMPT_TEMPLATE.md)
-- [playbooks/microsar-pil-psl/CHECKLIST.md](playbooks/microsar-pil-psl/CHECKLIST.md)
-- [playbooks/microsar-pil-psl/COMMANDS.md](playbooks/microsar-pil-psl/COMMANDS.md)
-- [playbooks/microsar-pil-psl/verify_psl_symbols.ps1](playbooks/microsar-pil-psl/verify_psl_symbols.ps1)
-
-Optional Claude automation assets:
-
-- [/.claude/skills/microsar-pil-psl-build/SKILL.md](.claude/skills/microsar-pil-psl-build/SKILL.md)
-- [/.claude/agents/microsar-psl-verifier.md](.claude/agents/microsar-psl-verifier.md)
-
-## Goal
-
-Use [build_micro4_vtt.bat](build_micro4_vtt.bat) to run PIL-only, PSL-only, or combined PIL+PSL flows with the checked-in CMake and architecture changes required for VS2017 x86 MICROSAR4 builds.
-
-The workflow is considered reproducible only when a fresh shell can execute the wrapper directly from the repo root and complete build plus verification without any extra manual environment setup.
-
-When the wrapper or target files are absent, this document together with `.claude` and `playbooks` must still be sufficient to regenerate them.
-
-## Managed Artifacts
-
-These files define the workflow and should be edited directly when the build logic changes:
-
-- `build_micro4_vtt.bat`
-- `rtimemake.bat`
-- `resource/cmake/architectures/i86lePEvs2017.tc`
-- `resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc`
-- `src/rti_me_psl/CMakeLists.txt`
-- `CMakeLists.txt`
-- `playbooks/microsar-pil-psl/verify_psl_symbols.ps1`
-
-Back up an existing file to a sibling `.bak` file before changing it.
-Changed CMake blocks should keep explicit `AI-MOD-BEGIN` and `AI-MOD-END` comments.
-
-## Delivery Contract
-
-The distributable workflow package consists of:
-
-- `build_micro_vtt.md`
-- `.claude`
-- `playbooks`
-
-The package is valid only if it contains enough information to recreate or update these target-repo files without `.cheat`:
-
-- `build_micro4_vtt.bat`
-- `resource/cmake/architectures/i86lePEvs2017.tc`
-- `resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc`
-- `src/rti_me_psl/CMakeLists.txt`
-- `CMakeLists.txt`
-
-If those targets already exist in the destination repo, the delivery package must be able to update them in place.
-If those targets do not exist, the delivery package must be able to generate them from the instructions preserved here and in `playbooks` and `.claude`.
-
-## Mode Matrix
-
-- `MODE=all`: build PIL then PSL
-- `MODE=pil`: build PIL only
-- `MODE=psl`: build PSL only
-
-## Script Contract
-
-[build_micro4_vtt.bat](build_micro4_vtt.bat) supports:
-
-- `MODE=all|pil|psl` default `all`
-- `CONFIG=Debug|Release` default `Debug`
-- `VERIFY=verify|noverify` default `verify`
-
-Validation requirements:
-
-- `OSEK_PATH` must be defined
-- `build_micro4_vtt.bat` must populate the repo-local build environment
-- `resource\scripts\rtime-make.bat` must exist
-- `rtimemake.bat` must resolve from the repo root after wrapper setup
-
-Wrapper responsibilities:
-
-- prepend repo root, `resource\scripts`, and `bin` to `PATH`
-- set `RTIMEHOME`, `NDDSHOME`, `RTIME_DIST`, and target-specific `RTIMEARCH`
-- call `rtimemake` with the correct target and C-only flags
-- synchronize built archives from `build\cmake\<Config>\<Target>\<Config>` into `lib\<Target>`
-- run PSL symbol verification without requiring `lib.exe` or `dumpbin.exe`
-
-## Wrapper Regeneration Checklist
-
-If `build_micro4_vtt.bat` is missing or must be rewritten in a new context, the regenerated script must preserve all of the following behavior:
-
-- support `all`, `pil`, and `psl` modes
-- support `Debug` and `Release` config selection
-- support `verify` and `noverify` verification modes
-- accept positional arguments and named forms split by `cmd`, including:
-  - `build_micro4_vtt.bat pil Debug verify`
-  - `build_micro4_vtt.bat MODE pil CONFIG Debug VERIFY verify`
-  - `build_micro4_vtt.bat MODE=pil CONFIG=Debug VERIFY=verify`
-- validate that `OSEK_PATH` is defined and exists
-- set repo-local environment directly in the wrapper instead of requiring `setenv_micro_32bit.bat`
-- ensure `rtimemake` resolves from the repo root by preparing `PATH`
-- call `rtimemake` with:
-  - generator `Visual Studio 15 2017`
-  - `-DRTIME_EXCLUDE_CPP_eq_TRUE`
-  - `-DRTI_BUILD_UNITTESTS_eq_FALSE`
-- update `RTIMEARCH` per target, especially during `MODE=all`
-- copy resulting `.a` or `.lib` files from `build\cmake\<Config>\<Target>\<Config>` to `lib\<Target>` after each target build
-- fail with non-zero exit code on invalid args, environment errors, build failures, sync failures, or verification failures
-- invoke [playbooks/microsar-pil-psl/verify_psl_symbols.ps1](playbooks/microsar-pil-psl/verify_psl_symbols.ps1) for PSL verification
-
-If a regenerated wrapper does not satisfy every item above, it is not equivalent to the validated workflow.
-
-The same principle applies to the target `.tc` files and required CMake updates: they are outputs of the portable workflow package, not prerequisites of it.
-
-## Build Commands
-
-```bat
-build_micro4_vtt.bat
-build_micro4_vtt.bat pil Debug verify
-build_micro4_vtt.bat psl Debug verify
-build_micro4_vtt.bat psl Release noverify
-build_micro4_vtt.bat all Debug noverify
+```bash
+export OSEK_PATH=/path/to/microsar/sip
 ```
 
-Recommended reproduction order:
+`build_micro4_vtt.sh` initializes `RTIMEHOME`, `NDDSHOME`, `RTIME_DIST`, `RTIMEARCH`, and `PATH`. Sourcing `set_micro_env.sh` is only needed for subsequent manual commands.
 
-```bat
-build_micro4_vtt.bat pil Debug verify
-build_micro4_vtt.bat psl Debug verify
-build_micro4_vtt.bat all Debug verify
+## Wrapper Usage
+
+```bash
+./build_micro4_vtt.sh [all|pil|psl] [Debug|Release] [verify|noverify]
+./build_micro4_vtt.sh MODE=all CONFIG=Debug VERIFY=verify
 ```
 
-Internal low-level commands used by the wrapper:
+Defaults are `all`, `Debug`, and `verify`.
 
-```bat
-rtimemake --config Debug --build --target i86lePEvs2017 --name i86lePEvs2017 -G "Visual Studio 15 2017" -DRTIME_EXCLUDE_CPP_eq_TRUE -DRTI_BUILD_UNITTESTS_eq_FALSE
+Examples:
 
-rtimemake --config Debug --build --target i86lePEvs2017-MICROSAR4 --name i86lePEvs2017-MICROSAR4 -G "Visual Studio 15 2017" -DRTIME_EXCLUDE_CPP_eq_TRUE -DRTI_BUILD_UNITTESTS_eq_FALSE
+```bash
+./build_micro4_vtt.sh pil Debug verify
+./build_micro4_vtt.sh psl Release verify
+./build_micro4_vtt.sh all Debug noverify
 ```
 
-Accepted invocation styles:
+The wrapper calls the Unix `resource/scripts/rtime-make` entry point with `Unix Makefiles`, C++ disabled, and unit tests disabled. Archives are copied from `build/cmake/<Config>/<Target>` to `lib/<Target>`.
 
-```bat
-build_micro4_vtt.bat pil Debug verify
-build_micro4_vtt.bat MODE pil CONFIG Debug VERIFY verify
-build_micro4_vtt.bat MODE=pil CONFIG=Debug VERIFY=verify
+## Direct Commands
+
+```bash
+bash resource/scripts/rtime-make --config Debug --build --delete \
+  --target i86leElfgcc13.3.0 --name i86leElfgcc13.3.0 \
+  -G "Unix Makefiles" -DRTIME_EXCLUDE_CPP=TRUE -DRTI_BUILD_UNITTESTS=FALSE
+
+bash resource/scripts/rtime-make --config Debug --build --delete \
+  --target i86leElfgcc13.3.0-MICROSAR4 --name i86leElfgcc13.3.0-MICROSAR4 \
+  -G "Unix Makefiles" -DRTIME_EXCLUDE_CPP=TRUE -DRTI_BUILD_UNITTESTS=FALSE
 ```
-
-The positional form is the simplest and is the recommended form for repeatable use.
 
 ## Verification
 
-- PIL archives: `lib\i86lePEvs2017`
-- PSL archives: `lib\i86lePEvs2017-MICROSAR4`
-- PSL symbol verification: [playbooks/microsar-pil-psl/verify_psl_symbols.ps1](playbooks/microsar-pil-psl/verify_psl_symbols.ps1)
+PIL verification confirms that `.a` archives were produced. PSL verification also runs:
 
-Verification details:
+```bash
+./playbooks/microsar-pil-psl/verify_psl_symbols.sh Debug
+```
 
-- PIL verification counts synchronized `.a` or `.lib` archives in `lib\i86lePEvs2017`
-- PSL verification counts synchronized `.a` or `.lib` archives in `lib\i86lePEvs2017-MICROSAR4`
-- PSL symbol verification reads the built archive and `autosarSocket.obj` directly in PowerShell and checks these symbols:
-  - `_NETIO_Autosar_TcpIp_udp_rx_indication`
-  - `_NETIO_Autosar_on_ip_assigned`
-  - `_NETIO_Autosar_on_socket_event`
-
-Known failure modes and fixes captured during implementation:
-
-- Do not rely on `setenv_micro_32bit.bat` for the primary workflow. The wrapper must be sufficient on its own.
-- Do not rely on `lib.exe` or `dumpbin.exe` being present in `PATH`. The checked-in verifier avoids those tools.
-- Do not assume PSL archives are copied to `lib\i86lePEvs2017-MICROSAR4` automatically by the build system. The wrapper performs explicit synchronization after each target build.
-- Batch parsing must tolerate positional arguments and named tokens split by `cmd` parsing behavior.
-- For `MODE=all`, `RTIMEARCH` must be updated per target rather than fixed once at startup.
-
-Evidence from the validated workflow in this repo:
-
-- `build_micro4_vtt.bat pil Debug noverify` completed successfully
-- `build_micro4_vtt.bat MODE pil CONFIG Debug VERIFY noverify` completed successfully
-- `build_micro4_vtt.bat psl Debug verify` completed successfully
-- `build_micro4_vtt.bat all Debug verify` completed successfully
-- PIL archives were synchronized into `lib\i86lePEvs2017`
-- PSL archives were synchronized into `lib\i86lePEvs2017-MICROSAR4`
-
-## Success Criteria
-
-- The batch exits non-zero on invalid args, missing environment, build failure, or verification failure.
-- PIL mode produces archives under `lib\i86lePEvs2017`.
-- PSL mode produces archives under `lib\i86lePEvs2017-MICROSAR4`.
-- PSL verification confirms the AUTOSAR callback symbol provider path.
+The verifier uses `ar` and `nm` to confirm that the ELF archive contains the AUTOSAR socket object and required callback symbols.

@@ -1,145 +1,50 @@
-# Windows
+# Connext Micro 4.3.0 Linux Build
 
-## set env values
-```cmd
-cd rti_connext_dds_micro-4.3.0_ER1
+This workspace builds 32-bit Connext Micro libraries on Linux with GCC 13.3.0.
 
-setenv_micro.bat
+## Targets
 
-cd ..
-```
+- PIL: `i86leElfgcc13.3.0`
+- MICROSAR4 PSL: `i86leElfgcc13.3.0-MICROSAR4`
 
-## Run MAG
-```cmd
-cd xml
+The PSL target uses the PIL libraries and requires a compatible MICROSAR SIP.
 
-%RTIMEHOME%\bin\rtiddsmag.bat -language C -referencedFile HelloWorldQos.xml HelloWorld.xml
-```
+## Prerequisites
 
-## Generate Example codes and replace HelloWorld.xml
-Please backup the original file!
-```cmd
-%RTIMEHOME%\bin\rtiddsgen.bat -example -exampleTemplate mag/dpde -language C HelloWorld.xml -replace
-```
+On Ubuntu, install CMake, Make, GCC 13.3.0, and 32-bit development support:
 
-### Example code update
-```c
-//HelloWorld_publisher.c:98
-/* TODO set sample attributes here */
-snprintf(sample->message,64,"Hello World(%d)!\0",i);
-sample->count = i;
-
-
-//HelloWorld_subscriber.c:240
-/* TODO read and process sample attributes here */
-printf("%s\n", sample->message);
-```
-
-## Build (last option is very important!)
-```cmd
-%RTIMEHOME%\resource\scripts\rtime-make.bat --config Debug -A x64 --target self --name x86_64lePEvs2017-Win10 --build --source-dir . -DRTIME_MAG_FILES_eq_HelloWorld.xml
-```
-## Run
-```cmd
-.\objs\x86_64lePEvs2017-Win10\Debug\HelloWorld_publisher.exe    
-
-.\objs\x86_64lePEvs2017-Win10\Debug\HelloWorld_subscriber.exe
-```
-
-# Linux
-
-## installation
 ```bash
-sudo apt update && sudo apt install build-essential
-sudo apt install cmake
-sudo apt install default-jre
-```
-## java setting
-download the deb file from here: https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
-```bash
-sudo apt install ./jdk-17.0.6_linux-x64_bin.deb
-sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17/bin/java 100
-sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-17/bin/javac 100
-sudo update-alternatives --config java
-## select the number of java-17
-```
-## gcc upgrade (13.3.0)
-```bash
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt update
-sudo apt install gcc-13 g++-13
-
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
-
-sudo update-alternatives --config gcc
-gcc --version
-```
-### glibc upgrade (issue/optional)
-```bash
-# adjust latest info of jammy (Ubuntu 22.04)
-sudo sed -i 's/jammy/noble/g' /etc/apt/sources.list
-sudo sed -i 's/jammy/noble/g' /etc/apt/sources.list.d/*.list
-sudo apt update
-
-# install GLIBC 2.39 
-sudo apt install libc6 libc6-dev libc-bin -y
-ldd --version
+sudo apt install cmake make gcc-13 g++-13 gcc-13-multilib g++-13-multilib binutils
 ```
 
-## Set Envs
-```bash
-# optional
-chmod -R 777 rti_connext_dds_micro-4.3.0_ER1
+## Build
 
-cd rti_connext_dds_micro-4.3.0_ER1
+```bash
+cd rti_connext_dds_micro-4.3.0_src
+
+# PIL only; OSEK_PATH is not required
+./build_micro4_vtt.sh pil Debug verify
+
+# MICROSAR PSL only
+export OSEK_PATH=/path/to/microsar/sip
+./build_micro4_vtt.sh psl Debug verify
+
+# PIL followed by PSL
+./build_micro4_vtt.sh all Release verify
+```
+
+Generated archives are synchronized to:
+
+```text
+rti_connext_dds_micro-4.3.0_src/lib/i86leElfgcc13.3.0/
+rti_connext_dds_micro-4.3.0_src/lib/i86leElfgcc13.3.0-MICROSAR4/
+```
+
+To use the PIL target in the current shell:
+
+```bash
 source set_micro_env.sh
-cd ..
-```
-### error handling (script from windows)
-```bash
-sed -i 's/\r$//' set_micro_env.sh
-```
-## Run MAG
-```bash
-cd xml
-$RTIMEHOME/bin/rtiddsmag -language C -referencedFile HelloWorldQos.xml HelloWorld.xml
 ```
 
-## Generate Example codes and replace HelloWorld.xml
-Please backup the original file!
-```bash
-$RTIMEHOME/bin/rtiddsgen -example -exampleTemplate mag/dpde -language C HelloWorld.xml -replace
-```
-### Example code update
-```c
-//HelloWorld_publisher.c:98
-/* TODO set sample attributes here */
-snprintf(sample->message,64,"Hello World(%d)!\0",i);
-sample->count = i;
-
-
-//HelloWorld_subscriber.c:240
-/* TODO read and process sample attributes here */
-printf("%s\n", sample->message);
-```
-
-## Build (last option is very important!)
-```bash
-$RTIMEHOME/resource/scripts/rtime-make --config Debug --build --target x86_64leElfgcc13.3.0-Linux6 --source-dir . -G "Unix Makefiles" --delete -DRTIME_MAG_FILES=HelloWorld.xml
-```
-## Run
-```bash
-./objs/x86_64leElfgcc13.3.0-Linux6/HelloWorld_publisher    
-
-./objs/x86_64leElfgcc13.3.0-Linux6/HelloWorld_subscriber
-```
-
-## Cross test
-No need to set enabled_transport and initial_peers
-```bash
-## Windows
-.\objs\x86_64lePEvs2017-Win10\Debug\HelloWorld_publisher.exe 
-
-## Linux
-./objs/x86_64leElfgcc13.3.0-Linux6/HelloWorld_subscriber 
-```
+See [build_micro_vtt.md](rti_connext_dds_micro-4.3.0_src/build_micro_vtt.md) for the complete workflow.

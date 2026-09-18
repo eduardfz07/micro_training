@@ -1,69 +1,16 @@
 ---
 name: microsar-pil-psl-build
-description: Build and verify RTI Micro PIL/PSL for VS2017 32-bit MICROSAR4 with symbol-level validation.
-disable-model-invocation: true
+description: "Use when building or verifying 32-bit Connext Micro PIL and MICROSAR4 PSL archives on Linux with GCC 13.3.0."
 ---
 
-# microsar-pil-psl-build
+# Linux MICROSAR PIL/PSL Build
 
-Use this workflow when building PIL/PSL for MICROSAR AUTOSAR on Windows with VS2017 x86.
+Run commands from the source root.
 
-Portable delivery rule
+1. Confirm `gcc-13`, `g++-13`, `ar`, `nm`, CMake, and 32-bit multilib support are available.
+2. For PSL builds, confirm `OSEK_PATH` points to the MICROSAR SIP root.
+3. Run `./build_micro4_vtt.sh pil|psl|all Debug|Release verify|noverify`.
+4. Confirm archives under `lib/i86leElfgcc13.3.0` and `lib/i86leElfgcc13.3.0-MICROSAR4`.
+5. For PSL builds, run `./playbooks/microsar-pil-psl/verify_psl_symbols.sh <Config>`.
 
-- The distributable package is `build_micro_vtt.md`, `.claude`, and `playbooks`.
-- `build_micro4_vtt.bat`, the MICROSAR `.tc` files, and required CMake edits must be reproducible from that package even if they are absent in the target repo copy.
-
-Inputs
-
-- OSEK_PATH points to MICROSAR SIP root
-- build_micro4_vtt.bat prepares the remaining repo-local build environment internally
-- if build_micro4_vtt.bat is missing, recreate it from build_micro_vtt.md before running builds
-- Target names:
-  - PIL: i86lePEvs2017
-  - PSL: i86lePEvs2017-MICROSAR4
-
-Execution Steps
-
-1. Explore
-
-- Read [build_micro_vtt.md](build_micro_vtt.md)
-- Determine whether [build_micro4_vtt.bat](build_micro4_vtt.bat), [resource/cmake/architectures/i86lePEvs2017.tc](resource/cmake/architectures/i86lePEvs2017.tc), [resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc](resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc), and [src/rti_me_psl/CMakeLists.txt](src/rti_me_psl/CMakeLists.txt) exist or must be recreated.
-- If any of them are absent or inconsistent, rebuild them to match the regeneration rules in build_micro_vtt.md before continuing.
-
-1. Build PIL (C-only)
-
-- Command:
-  - .\\build_micro4_vtt.bat MODE=pil CONFIG=Debug VERIFY=verify
-
-1. Build PSL (C-only)
-
-- Command:
-  - .\\build_micro4_vtt.bat MODE=psl CONFIG=Debug VERIFY=verify
-
-1. Verify output artifacts
-
-- Check for:
-  - lib/i86lePEvs2017
-  - lib/i86lePEvs2017-MICROSAR4
-
-1. Verify symbol providers
-
-- Run:
-  - powershell -ExecutionPolicy Bypass -File .\\playbooks\\microsar-pil-psl\\verify_psl_symbols.ps1
-- Must include in autosarSocket.obj:
-  - _NETIO_Autosar_TcpIp_udp_rx_indication
-  - _NETIO_Autosar_on_ip_assigned
-  - _NETIO_Autosar_on_socket_event
-
-Stop Conditions
-
-- Build command returns non-zero
-- Required archive missing
-- Required symbol missing
-
-If Failed
-
-- Treat unresolved AUTOSAR symbols as configuration/routing issue first
-- Re-check RTIME_PIL_USE_TARGET_PSL and RTIME_TARGET_PSL routing
-- Re-check OSEK_PATH and BSW include availability (Det, Dem, NvM)
-- Confirm `resource/cmake/architectures/i86lePEvs2017.tc` and `resource/cmake/architectures/i86lePEvs2017-MICROSAR4.tc` still match the checked-in workflow
+Do not use Visual Studio, MSVC, Windows batch scripts, PowerShell, `lib.exe`, or `dumpbin.exe` for this workflow.

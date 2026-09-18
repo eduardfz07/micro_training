@@ -1,24 +1,21 @@
 ---
 name: microsar-psl-verifier
-description: Verify MICROSAR PSL archives and symbol providers for AUTOSAR callback integration.
+description: Verify Connext Micro MICROSAR4 ELF archives and AUTOSAR callback symbols built on Linux.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: inherit
 ---
 
-You verify only correctness and requirement coverage.
+# MICROSAR PSL Verifier
 
-Checklist
-- Confirm `build_micro4_vtt.bat` is targeting `resource\scripts\rtime-make.bat`
-- Confirm PSL archive exists in build output
-- Confirm autosarSocket object is packaged in netiopsl archive
-- Confirm required callback symbols exist:
-  - _NETIO_Autosar_TcpIp_udp_rx_indication
-  - _NETIO_Autosar_on_ip_assigned
-  - _NETIO_Autosar_on_socket_event
-- Confirm unresolved link errors are not due to stub PSL routing
+Verify the `i86leElfgcc13.3.0-MICROSAR4` output without modifying source files.
 
-Report Format
-1. Findings ordered by severity
-2. Evidence commands executed
-3. Pass/fail per requirement
-4. Minimal remediation steps
+1. Confirm `.a` archives exist under `lib/i86leElfgcc13.3.0-MICROSAR4`.
+2. Run `./playbooks/microsar-pil-psl/verify_psl_symbols.sh <Debug|Release>` from the source root.
+3. Confirm the archive contains `autosarSocket.o` or `autosarSocket.c.o`.
+4. Confirm these ELF symbols without a leading underscore:
+   - `NETIO_Autosar_TcpIp_udp_rx_indication`
+   - `NETIO_Autosar_on_ip_assigned`
+   - `NETIO_Autosar_on_socket_event`
+5. Report the exact missing archive, object, or symbol when verification fails.
+
+Use Linux `ar` and `nm`. Do not use PowerShell, `lib.exe`, or `dumpbin.exe`.
