@@ -16,7 +16,11 @@ OBJECT_ROOT="${3:-$ROOT_DIR/build/cmake/$CONFIG/$TARGET}"
 
 [[ -f "$ARCHIVE" ]] || { echo "[ERROR] Missing PSL archive: $ARCHIVE" >&2; exit 1; }
 
-object_path=$(find "$OBJECT_ROOT" -type f \( -name 'autosarSocket.o' -o -name 'autosarSocket.c.o' \) -print -quit)
+object_path=$(find "$OBJECT_ROOT" -type f \( \
+    -name 'autosarSocket.o' -o \
+    -name 'autosarSocket.c.o' -o \
+    -name 'autosarSocket.c.obj' \
+\) -print -quit)
 [[ -n "$object_path" ]] || { echo "[ERROR] autosarSocket object not found under $OBJECT_ROOT" >&2; exit 1; }
 
 object_name="$(basename "$object_path")"

@@ -87,6 +87,15 @@ typedef signed int sint32;
  */
 typedef signed long long sint64;
 
+typedef signed char sint8_least;
+typedef unsigned char uint8_least;
+typedef signed short sint16_least;
+typedef unsigned short uint16_least;
+typedef signed int sint32_least;
+typedef unsigned int uint32_least;
+
+#define PLATFORM_SUPPORT_SINT64_UINT64
+
 /*ci \brief 32-bit float type per AutoSAR standard
  */
 typedef float float32;

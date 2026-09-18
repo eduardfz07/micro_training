@@ -56,6 +56,16 @@ IF (RTIME_TARGET_NAME MATCHES "i86.*") # Microsar for vVIRTUALtarget
     INCLUDE_DIRECTORIES("${USAR_PATH}/BSW/Vtt_Common")
     INCLUDE_DIRECTORIES("${USAR_PATH}/BSW/VttCntrl")
     INCLUDE_DIRECTORIES("${USAR_PATH}/BSW/VttEthTrcv_30_Vtt")
+    INCLUDE_DIRECTORIES("${USAR_PATH}/Demo/Appl/Include")
+    INCLUDE_DIRECTORIES("${USAR_PATH}/Demo/Appl/GenDataVtt")
+    INCLUDE_DIRECTORIES("${USAR_PATH}/Demo/Appl/GenDataVtt/Components")
+
+    FILE(GLOB _MICROSAR_BSW_DIRS "${USAR_PATH}/BSW/*")
+    FOREACH(_bsw_dir ${_MICROSAR_BSW_DIRS})
+        IF (IS_DIRECTORY "${_bsw_dir}")
+            INCLUDE_DIRECTORIES("${_bsw_dir}")
+        ENDIF()
+    ENDFOREACH()
     
     SET(RTI_ENDIAN_LITTLE 1)
 
