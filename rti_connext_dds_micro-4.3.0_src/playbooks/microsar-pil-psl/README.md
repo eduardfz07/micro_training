@@ -1,12 +1,14 @@
 # MICROSAR PIL/PSL Linux Workflow
 
-This playbook covers the Linux GCC 13.3.0 targets:
+This playbook covers the ELF64 Linux GCC 13.3.0 targets:
 
-- `i86leElfgcc13.3.0`
-- `i86leElfgcc13.3.0-MICROSAR4`
+- `x86_64leElfgcc13.3.0`
+- `x86_64leElfgcc13.3.0-MICROSAR4`
 
-Use `../../build_micro4_vtt.sh` from the source root. PIL builds require GCC multilib; PSL builds also require `OSEK_PATH`.
+Use `./build_micro4_vtt.sh` from the source root. PSL builds require `OSEK_PATH`.
 
-Outputs are synchronized to `lib/<target>`. The Linux verifier uses ELF tools `ar` and `nm`; it does not require PowerShell, `lib.exe`, or `dumpbin.exe`.
+The MICROSAR output directory is a complete SUT link directory. It excludes the
+generic PIL variants of `netiopsl`, `ospsl`, and `rti_me_psl` and includes the
+MICROSAR4 variants instead.
 
 See `build_micro_vtt.md` for complete usage and `COMMANDS.md` for command examples.

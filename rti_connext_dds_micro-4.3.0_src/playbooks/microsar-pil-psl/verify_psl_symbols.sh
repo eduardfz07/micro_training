@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TARGET="i86leElfgcc13.3.0-MICROSAR4"
+TARGET="x86_64leElfgcc13.3.0-MICROSAR4"
 CONFIG="${1:-Debug}"
 if [[ "$CONFIG" == "Debug" ]]; then
     archive_suffix="zd"
